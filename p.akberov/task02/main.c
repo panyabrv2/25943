@@ -7,7 +7,8 @@ int main()
     time_t now;
     time(&now);
 
-    now -= 8 * 60 * 60;
+    time_t pst_time = now - 8 * 60 * 60;
+    time_t pdt_time = now - 7 * 60 * 60;
 
     struct tm *pst = gmtime(&now);
     struct tm *pdt = gmtime(&pdt_time);
