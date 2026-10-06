@@ -7,35 +7,24 @@
 
 extern char **environ;
 
-struct Option
-{
-    int name;
-    char *argument;
-};
-
 int main(int argc, char *argv[])
 {
     int option;
-
-    struct Option options[argc];
-    int option_count = 0;
+    int options[argc];
+    char *arguments[argc];
+    int count = 0;
 
     while ((option = getopt(argc, argv, "ispuU:cC:dvV:")) != -1)
     {
-        options[option_count].name = option;
-
-        if (optarg != NULL)
-            options[option_count].argument = optarg;
-        else
-            options[option_count].argument = NULL;
-
-        option_count++;
+        options[count] = option;
+        arguments[count] = optarg;
+        count++;
     }
 
-    for (int i = option_count - 1; i >= 0; --i)
+    for (int i = count - 1; i >= 0; i--)
     {
-        option = options[i].name;
-        char *argument = options[i].argument;
+        option = options[i];
+        char *argument = arguments[i];
 
         switch (option)
         {
@@ -175,7 +164,6 @@ int main(int argc, char *argv[])
                            argument, equal + 1);
 
                 *equal = '=';
-
                 break;
             }
 
