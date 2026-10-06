@@ -7,61 +7,80 @@
 
 extern char **environ;
 
+struct Option
+{
+    int name;
+    char *argument;
+};
+
 int main(int argc, char *argv[])
 {
     int option;
 
+    struct Option options[argc];
+    int option_count = 0;
+
     while ((option = getopt(argc, argv, "ispuU:cC:dvV:")) != -1)
     {
+        options[option_count].name = option;
+
+        if (optarg != NULL)
+            options[option_count].argument = optarg;
+        else
+            options[option_count].argument = NULL;
+
+        option_count++;
+    }
+
+    for (int i = option_count - 1; i >= 0; --i)
+    {
+        option = options[i].name;
+        char *argument = options[i].argument;
+
         switch (option)
         {
             case 'i':
-                printf("UID: %ld\n", (long)getuid());
-                printf("EUID: %ld\n", (long)geteuid());
-                printf("GID: %ld\n", (long)getgid());
-                printf("EGID: %ld\n", (long)getegid());
+                printf("uid: %ld\n", (long)getuid());
+                printf("euid: %ld\n", (long)geteuid());
+                printf("gid: %ld\n", (long)getgid());
+                printf("egid: %ld\n", (long)getegid());
                 break;
-
 
             case 's':
                 if (setpgid(0, 0) == -1)
                     perror("setpgid");
                 else
-                    printf("Process became group leader\n");
+                    printf("process group changed\n");
                 break;
-
 
             case 'p':
-                printf("PID: %ld\n", (long)getpid());
-                printf("PPID: %ld\n", (long)getppid());
-                printf("PGID: %ld\n", (long)getpgrp());
+                printf("pid: %ld\n", (long)getpid());
+                printf("ppid: %ld\n", (long)getppid());
+                printf("pgid: %ld\n", (long)getpgrp());
                 break;
-
 
             case 'u':
                 printf("ulimit: %ld\n", ulimit(UL_GETFSIZE));
                 break;
 
-
             case 'U':
             {
                 char *end;
-                long value = strtol(optarg, &end, 10);
+                long value = strtol(argument, &end, 10);
 
                 if (*end != '\0' || value < 0)
                 {
-                    printf("Invalid value for -U\n");
+                    printf("invalid value for -U\n");
                     break;
                 }
 
                 if (ulimit(UL_SETFSIZE, value) == -1)
                     perror("ulimit");
                 else
-                    printf("New ulimit: %ld\n", value);
+                    printf("ulimit changed to %ld\n", value);
 
                 break;
             }
-
 
             case 'c':
             {
@@ -74,27 +93,25 @@ int main(int argc, char *argv[])
                 }
 
                 if (limit.rlim_cur == RLIM_INFINITY)
-                    printf("Core file size: unlimited\n");
+                    printf("core file size: unlimited\n");
                 else
-                    printf("Core file size: %llu bytes\n",
+                    printf("core file size: %llu bytes\n",
                            (unsigned long long)limit.rlim_cur);
 
                 break;
             }
 
-
             case 'C':
             {
                 char *end;
                 unsigned long long value;
-
                 struct rlimit limit;
 
-                value = strtoull(optarg, &end, 10);
+                value = strtoull(argument, &end, 10);
 
                 if (*end != '\0')
                 {
-                    printf("Invalid value for -C\n");
+                    printf("invalid value for -C\n");
                     break;
                 }
 
@@ -109,11 +126,10 @@ int main(int argc, char *argv[])
                 if (setrlimit(RLIMIT_CORE, &limit) == -1)
                     perror("setrlimit");
                 else
-                    printf("New core file size: %llu bytes\n", value);
+                    printf("core file size changed to %llu bytes\n", value);
 
                 break;
             }
-
 
             case 'd':
             {
@@ -122,11 +138,10 @@ int main(int argc, char *argv[])
                 if (getcwd(path, sizeof(path)) == NULL)
                     perror("getcwd");
                 else
-                    printf("Current directory: %s\n", path);
+                    printf("current directory: %s\n", path);
 
                 break;
             }
-
 
             case 'v':
             {
@@ -141,32 +156,31 @@ int main(int argc, char *argv[])
                 break;
             }
 
-
             case 'V':
             {
-                char *equal = strchr(optarg, '=');
+                char *equal = strchr(argument, '=');
 
                 if (equal == NULL)
                 {
-                    printf("Use: -Vname=value\n");
+                    printf("use -Vname=value\n");
                     break;
                 }
 
                 *equal = '\0';
 
-                if (setenv(optarg, equal + 1, 1) == -1)
+                if (setenv(argument, equal + 1, 1) == -1)
                     perror("setenv");
                 else
-                    printf("%s=%s\n", optarg, equal + 1);
+                    printf("variable changed: %s=%s\n",
+                           argument, equal + 1);
 
                 *equal = '=';
 
                 break;
             }
 
-
             case '?':
-                printf("Unknown option or missing argument\n");
+                printf("unknown option or missing argument\n");
                 break;
         }
     }
