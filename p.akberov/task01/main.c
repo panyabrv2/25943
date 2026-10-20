@@ -7,6 +7,23 @@
 
 extern char **environ;
 
+void printHelp(const char *name)
+{
+    printf("usage: %s [options]\n", name);
+    printf("options are processed from right to left\n");
+    printf("-h             show help\n");
+    printf("-i             print uid, euid, gid, egid\n");
+    printf("-s             become process group leader\n");
+    printf("-p             print pid, ppid, pgid\n");
+    printf("-u             print file size limit in 512-byte blocks\n");
+    printf("-U value       change file size limit in 512-byte blocks\n");
+    printf("-c             print core file size limit in bytes\n");
+    printf("-C size        change core file size limit in bytes\n");
+    printf("-d             print current directory\n");
+    printf("-v             print environment variables\n");
+    printf("-V name=value  add or change environment variable\n");
+}
+
 int main(int argc, char *argv[])
 {
     int option;
@@ -14,11 +31,36 @@ int main(int argc, char *argv[])
     char *arguments[argc];
     int count = 0;
 
-    while ((option = getopt(argc, argv, "ispuU:cC:dvV:")) != -1)
+    if (argc == 1)
     {
+        printHelp(argv[0]);
+        return 0;
+    }
+
+    while ((option = getopt(argc, argv, "hispuU:cC:dvV:")) != -1)
+    {
+        if (option == 'h')
+        {
+            printHelp(argv[0]);
+            return 0;
+        }
+
+        if (option == '?')
+        {
+            fprintf(stderr, "use -h for help\n");
+            return 1;
+        }
+
         options[count] = option;
         arguments[count] = optarg;
         count++;
+    }
+
+    if (optind < argc)
+    {
+        fprintf(stderr, "unexpected argument: %s\n", argv[optind]);
+        fprintf(stderr, "use -h for help\n");
+        return 1;
     }
 
     for (int i = count - 1; i >= 0; i--)
@@ -166,10 +208,6 @@ int main(int argc, char *argv[])
                 *equal = '=';
                 break;
             }
-
-            case '?':
-                printf("unknown option or missing argument\n");
-                break;
         }
     }
 

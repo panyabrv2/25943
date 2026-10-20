@@ -1,33 +1,24 @@
+#include <sys/types.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 
-int main()
+extern char *tzname[];
+
+int main(void)
 {
     time_t now;
-    time(&now);
+    struct tm *sp;
 
-    time_t pst_time = now - 8 * 60 * 60;
-    time_t pdt_time = now - 7 * 60 * 60;
+    setenv("TZ", "PST8", 1);
+    tzset();
 
-    struct tm *pst = gmtime(&now);
-    struct tm *pdt = gmtime(&pdt_time);
+    (void) time(&now);
 
-    printf("%02d/%02d/%d %02d:%02d:%02d PST\n",
-           pst->tm_mon + 1,
-           pst->tm_mday,
-           pst->tm_year + 1900,
-           pst->tm_hour,
-           pst->tm_min,
-           pst->tm_sec);
+    printf("%s", ctime(&now));
 
-    printf("%02d/%02d/%d %02d:%02d:%02d PDT\n",
-           pdt->tm_mon + 1,
-           pdt->tm_mday,
-           pdt->tm_year + 1900,
-           pdt->tm_hour,
-           pdt->tm_min,
-           pdt->tm_sec);
-
+    sp = localtime(&now);
+    printf("%d/%d/%02d %d:%02d %s \n", sp->tm_mon + 1, sp->tm_mday, sp->tm_year+1900, sp->tm_hour, sp->tm_min, tzname[sp->tm_isdst]);
+    exit(0);
     return 0;
 }
