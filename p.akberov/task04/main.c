@@ -118,7 +118,7 @@ int main(void)
 
 	if (strchr(buffer, '\033') != NULL)
 	{
-            fprintf(stderr, "escape sequences are not allowed\n");
+            fprintf(stderr, "bad input\n");
 	     continue;
 	}
 

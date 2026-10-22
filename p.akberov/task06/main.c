@@ -24,7 +24,7 @@ void alarmHandler(int signalNumber)
     timedOut = 1;
 }
 
-int readNumber(char *input, size_t capacity)
+int readNumber(char *input, size_t capacity, int enableAlarm)
 {
     sigset_t blocked, oldMask, waitMask;
 
@@ -42,7 +42,8 @@ int readNumber(char *input, size_t capacity)
     int result = -1;
 
     timedOut = 0;
-    alarm(5);
+    if (enableAlarm)
+        alarm(5);
 
     while (1)
     {
@@ -103,7 +104,8 @@ int readNumber(char *input, size_t capacity)
 
     int savedErrno = errno;
 
-    alarm(0);
+    if (enableAlarm)
+        alarm(0);
 
     if (sigprocmask(SIG_SETMASK, &oldMask, NULL) == -1)
         return -1;
@@ -266,10 +268,14 @@ int main(int argc, char *argv[])
                    (long long)table[i].length);
 
         char input[64];
+        int isFirstInput = 1;
 
         while (1)
         {
-            printf("\nline number (5 seconds, 0 to exit): ");
+            if (isFirstInput)
+                printf("\nline number (5 seconds, 0 to exit): ");
+            else
+                printf("\nline number (0 to exit): ");
 
             if (fflush(stdout) == EOF)
             {
@@ -278,12 +284,12 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            int result = readNumber(input, sizeof(input));
+            int result = readNumber(input, sizeof(input), isFirstInput);
+            isFirstInput = 0;
 
             if (result == -2)
             {
                 printf("\ntime is up\n");
-                status = printPart(fd, 0, -1);
                 break;
             }
 
